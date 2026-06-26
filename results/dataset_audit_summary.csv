@@ -1,0 +1,9 @@
+class,original,unique,duplicates_removed
+Atelectasis,682,682,0
+Effusion,533,533,0
+Emphysema,332,332,0
+No finding,1066,1060,6
+Nodule,656,656,0
+Pneumonia,497,497,0
+Pneumothorax,345,345,0
+Total,4111,4105,6

@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Data and models
+data/
+datasets/
+raw_data/
+*.pt
+*.pth
+*.ckpt
+runs/
+logs/
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/

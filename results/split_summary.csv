@@ -1,0 +1,4 @@
+split,images,ratio
+train,2872,0.70
+validation,616,0.15
+test,617,0.15

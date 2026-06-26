@@ -1,0 +1,27 @@
+experiment_name: efficientnet_b7_768
+model_name: efficientnet_b7
+num_classes: 7
+img_size: 768
+batch_size: 8
+epochs: 40
+learning_rate: 0.0001
+weight_decay: 0.0001
+optimizer: adamw
+scheduler: reduce_on_plateau
+scheduler_patience: 3
+early_stopping_patience: 8
+use_pretrained: true
+use_amp: true
+use_class_weights: true
+use_weighted_sampler: true
+num_workers: 4
+seed: 42
+monitor_metric: f1_macro
+classes:
+  - Atelectasis
+  - Effusion
+  - Emphysema
+  - No finding
+  - Nodule
+  - Pneumonia
+  - Pneumothorax
