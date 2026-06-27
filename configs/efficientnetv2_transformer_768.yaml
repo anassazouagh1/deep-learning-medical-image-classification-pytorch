@@ -1,0 +1,198 @@
+# ============================================================
+# EfficientNetV2 + Transformer / ViT-style configuration
+# Chest X-Ray Multi-Class Classification
+# ============================================================
+#
+# This configuration represents the experimental hybrid model
+# tested during the internship workflow.
+#
+# The objective was to compare a pure CNN approach against a
+# CNN + Transformer design, using EfficientNetV2 as convolutional
+# feature extractor and a Transformer-style classification module
+# to model global spatial relations.
+#
+# Confirmed test results:
+#   Accuracy:        0.5851
+#   Macro-F1:        0.5861
+#   AUC macro OVR:   0.8791
+#
+# Although this hybrid model did not outperform EfficientNet-B7,
+# it was useful to analyze the trade-off between model complexity,
+# stability and generalization in a multiclass medical imaging task.
+#
+# ============================================================
+
+experiment_name: efficientnetv2_transformer_768_chest_xray_multiclass
+seed: 42
+
+# ------------------------------------------------------------
+# Dataset configuration
+# ------------------------------------------------------------
+data:
+  image_size: 768
+  num_workers: 4
+
+  expected_format: ImageFolder
+
+  classes:
+    - Atelectasis
+    - Effusion
+    - Emphysema
+    - No finding
+    - Nodule
+    - Pneumonia
+    - Pneumothorax
+
+# ------------------------------------------------------------
+# Model configuration
+# ------------------------------------------------------------
+model:
+  name: efficientnetv2_transformer
+  pretrained: true
+  num_classes: 7
+  dropout: 0.30
+
+  # Hybrid architecture:
+  # EfficientNetV2 extracts convolutional feature maps.
+  # A Transformer / ViT-style head processes spatial tokens
+  # obtained from the CNN feature map.
+  architecture_type: cnn_transformer_hybrid
+  backbone: efficientnet_v2_s
+  transformer_head: true
+
+  transformer:
+    grid_size: 7
+    embed_dim: 256
+    num_heads: 8
+    num_layers: 2
+    mlp_ratio: 4
+    activation: gelu
+    use_cls_token: true
+    positional_embedding: learned
+
+# ------------------------------------------------------------
+# Training configuration
+# ------------------------------------------------------------
+training:
+  batch_size: 6
+  epochs: 50
+
+  optimizer: adamw
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+
+  scheduler: cosine
+  min_learning_rate: 0.000001
+
+  monitor_metric: f1_macro
+  early_stopping_patience: 8
+
+  mixed_precision: true
+
+  # Class imbalance handling.
+  use_class_weights: true
+  use_weighted_sampler: true
+
+  gradient_clip_norm: 5.0
+
+# ------------------------------------------------------------
+# Transfer Learning strategy
+# ------------------------------------------------------------
+transfer_learning:
+  strategy: fine_tuning
+  freeze_backbone_initially: false
+
+  train_cnn_backbone: true
+  train_transformer_head: true
+  train_classifier_head: true
+
+# ------------------------------------------------------------
+# Evaluation configuration
+# ------------------------------------------------------------
+evaluation:
+  split: test
+
+  metrics:
+    - accuracy
+    - balanced_accuracy
+    - precision_macro
+    - recall_macro
+    - f1_macro
+    - precision_weighted
+    - recall_weighted
+    - f1_weighted
+    - auc_macro_ovr
+    - sensitivity_macro
+    - specificity_macro
+    - confusion_matrix
+
+  export_predictions: true
+  export_confusion_matrix: true
+  export_per_class_report: true
+  export_error_analysis: true
+
+# ------------------------------------------------------------
+# Interpretability configuration
+# ------------------------------------------------------------
+interpretability:
+  method:
+    - gradcam
+    - saliency_map
+
+  # For hybrid models, Grad-CAM is applied over the CNN backbone
+  # before the Transformer classification head.
+  target_layer: efficientnet_features_last_block
+  save_heatmap: true
+  save_overlay: true
+  save_summary_figure: true
+
+# ------------------------------------------------------------
+# HPC / GPU configuration
+# ------------------------------------------------------------
+hardware:
+  device: cuda
+  allow_cpu_fallback: true
+  allow_local_pretrained_weights: true
+  slurm_ready: true
+
+  # The hybrid architecture is more memory-demanding than a standard CNN,
+  # especially with 768x768 inputs.
+  gpu_memory_notes:
+    - "Use a smaller batch size than EfficientNet-B7 if CUDA memory is limited."
+    - "Mixed precision is recommended for this configuration."
+    - "Gradient clipping is enabled to improve training stability."
+
+# ------------------------------------------------------------
+# Output configuration
+# ------------------------------------------------------------
+outputs:
+  checkpoints_dir: checkpoints
+  results_dir: results
+  logs_dir: logs
+  gradcam_dir: outputs/gradcam
+
+  save_best_model: true
+  save_last_model: true
+  save_training_history: true
+  save_environment_info: true
+
+# ------------------------------------------------------------
+# Public experiment summary
+# ------------------------------------------------------------
+reported_test_results:
+  accuracy: 0.5851
+  macro_f1: 0.5861
+  auc_macro_ovr: 0.8791
+
+comparison_notes:
+  - "This model was designed to test whether a Transformer-style head could improve global feature representation."
+  - "The CNN backbone extracts local visual features from the radiograph."
+  - "The Transformer head processes spatial tokens to model relations between image regions."
+  - "The hybrid approach increased architectural complexity and computational cost."
+  - "EfficientNet-B7 remained the best confirmed model in the final comparison."
+  - "The experiment was still useful because it provided a technical comparison between CNN-only and CNN-Transformer approaches."
+
+notes:
+  - "This configuration is experimental and more computationally demanding than standard CNN models."
+  - "The reported results correspond to the confirmed internship experiments."
+  - "The model is useful as a research prototype, even if it was not the best-performing architecture."
