@@ -1,27 +1,184 @@
-experiment_name: efficientnet_b7_768
-model_name: efficientnet_b7
-num_classes: 7
-img_size: 768
-batch_size: 8
-epochs: 40
-learning_rate: 0.0001
-weight_decay: 0.0001
-optimizer: adamw
-scheduler: reduce_on_plateau
-scheduler_patience: 3
-early_stopping_patience: 8
-use_pretrained: true
-use_amp: true
-use_class_weights: true
-use_weighted_sampler: true
-num_workers: 4
+# ============================================================
+# EfficientNet-B7 768x768 configuration
+# Chest X-Ray Multi-Class Classification
+# ============================================================
+#
+# This configuration represents the strongest confirmed experiment
+# developed during the internship workflow.
+#
+# Best confirmed test results:
+#   Accuracy:        0.6742
+#   Macro-F1:        0.6681
+#   AUC macro OVR:   0.9113
+#   Macro Recall:    0.6863
+#   Macro Specificity: 0.9445
+#
+# Dataset:
+#   7 classes
+#   4105 unique images after duplicate removal
+#   Train: 2872
+#   Validation: 616
+#   Test: 617
+#
+# ============================================================
+
+experiment_name: efficientnet_b7_768_chest_xray_multiclass
 seed: 42
-monitor_metric: f1_macro
-classes:
-  - Atelectasis
-  - Effusion
-  - Emphysema
-  - No finding
-  - Nodule
-  - Pneumonia
-  - Pneumothorax
+
+# ------------------------------------------------------------
+# Dataset configuration
+# ------------------------------------------------------------
+data:
+  image_size: 768
+  num_workers: 4
+
+  # Expected dataset structure:
+  # data/
+  #   train/
+  #   val/
+  #   test/
+  #
+  # Each split must contain one folder per class.
+  expected_format: ImageFolder
+
+  classes:
+    - Atelectasis
+    - Effusion
+    - Emphysema
+    - No finding
+    - Nodule
+    - Pneumonia
+    - Pneumothorax
+
+# ------------------------------------------------------------
+# Model configuration
+# ------------------------------------------------------------
+model:
+  name: efficientnet_b7
+  pretrained: true
+  num_classes: 7
+  dropout: 0.30
+
+  # The classification head is replaced to match the 7 diagnostic classes.
+  replace_classifier_head: true
+
+# ------------------------------------------------------------
+# Training configuration
+# ------------------------------------------------------------
+training:
+  batch_size: 8
+  epochs: 50
+
+  optimizer: adamw
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+
+  scheduler: cosine
+  min_learning_rate: 0.000001
+
+  monitor_metric: f1_macro
+  early_stopping_patience: 8
+
+  # Mixed precision is useful for GPU training and high-resolution images.
+  mixed_precision: true
+
+  # Class imbalance handling.
+  use_class_weights: true
+  use_weighted_sampler: true
+
+  # Gradient clipping is handled inside the training engine.
+  gradient_clip_norm: 5.0
+
+# ------------------------------------------------------------
+# Transfer Learning strategy
+# ------------------------------------------------------------
+transfer_learning:
+  strategy: fine_tuning
+  freeze_backbone_initially: false
+
+  # During the internship, the final experiments used fine-tuning
+  # instead of only training the classification head.
+  train_classifier_head: true
+  train_backbone: true
+
+# ------------------------------------------------------------
+# Evaluation configuration
+# ------------------------------------------------------------
+evaluation:
+  split: test
+
+  metrics:
+    - accuracy
+    - balanced_accuracy
+    - precision_macro
+    - recall_macro
+    - f1_macro
+    - precision_weighted
+    - recall_weighted
+    - f1_weighted
+    - auc_macro_ovr
+    - sensitivity_macro
+    - specificity_macro
+    - confusion_matrix
+
+  export_predictions: true
+  export_confusion_matrix: true
+  export_per_class_report: true
+  export_error_analysis: true
+
+# ------------------------------------------------------------
+# Interpretability configuration
+# ------------------------------------------------------------
+interpretability:
+  method:
+    - gradcam
+    - saliency_map
+
+  target_layer: auto
+  save_heatmap: true
+  save_overlay: true
+  save_summary_figure: true
+
+# ------------------------------------------------------------
+# HPC / GPU configuration
+# ------------------------------------------------------------
+hardware:
+  device: cuda
+  allow_cpu_fallback: true
+
+  # Useful for cluster environments where pretrained weights may need
+  # to be loaded manually because direct internet access is not available.
+  allow_local_pretrained_weights: true
+
+  slurm_ready: true
+
+# ------------------------------------------------------------
+# Output configuration
+# ------------------------------------------------------------
+outputs:
+  checkpoints_dir: checkpoints
+  results_dir: results
+  logs_dir: logs
+  gradcam_dir: outputs/gradcam
+
+  save_best_model: true
+  save_last_model: true
+  save_training_history: true
+  save_environment_info: true
+
+# ------------------------------------------------------------
+# Public experiment summary
+# ------------------------------------------------------------
+reported_test_results:
+  accuracy: 0.6742
+  macro_f1: 0.6681
+  auc_macro_ovr: 0.9113
+  macro_recall_sensitivity: 0.6863
+  macro_specificity: 0.9445
+  test_loss: 1.1676
+
+notes:
+  - "EfficientNet-B7 at 768x768 provided the best confirmed balance between performance and stability."
+  - "AUC macro OVR was the strongest metric, showing good discriminative capacity across the seven classes."
+  - "The task is multiclass and imbalanced, so Macro-F1 and AUC were more informative than Accuracy alone."
+  - "Grad-CAM and saliency maps were used for qualitative interpretability of predictions."
