@@ -1,8 +1,87 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "raravis-dl-image-classification"
-version = "1.0.0"
-description = "PyTorch pipeline for multi-class medical image classification"
+name = "deep-learning-medical-image-classification-pytorch"
+version = "0.1.0"
+description = "PyTorch pipeline for multi-class chest X-ray classification with transfer learning, Grad-CAM and GPU/HPC execution."
+readme = "README.md"
 requires-python = ">=3.10"
+license = { text = "MIT" }
+
+authors = [
+    { name = "Anass Azouagh", email = "anassazouagh1@gmail.com" }
+]
+
+keywords = [
+    "deep-learning",
+    "pytorch",
+    "computer-vision",
+    "medical-imaging",
+    "x-ray-classification",
+    "transfer-learning",
+    "grad-cam",
+    "hpc",
+    "slurm"
+]
+
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Image Recognition",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: OS Independent"
+]
+
+dependencies = [
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+    "numpy>=1.23.0",
+    "pandas>=1.5.0",
+    "scikit-learn>=1.2.0",
+    "Pillow>=9.0.0",
+    "PyYAML>=6.0",
+    "matplotlib>=3.6.0",
+    "tqdm>=4.64.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0"
+]
+
+[project.urls]
+Repository = "https://github.com/anassazouagh1/deep-learning-medical-image-classification-pytorch"
+LinkedIn = "https://www.linkedin.com/in/anass-azouagh"
+
+[project.scripts]
+xray-train = "raravis_dl.train:main"
+xray-evaluate = "raravis_dl.evaluate:main"
+xray-infer = "raravis_dl.infer:main"
+xray-gradcam = "raravis_dl.interpretability:main"
+xray-split-dataset = "raravis_dl.split_dataset:main"
+xray-duplicate-audit = "raravis_dl.duplicate_audit:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+ignore = ["E501"]
