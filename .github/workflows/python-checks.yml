@@ -2,19 +2,45 @@ name: Python checks
 
 on:
   push:
+    branches:
+      - main
+      - master
   pull_request:
+    branches:
+      - main
+      - master
 
 jobs:
   tests:
+    name: Run Python tests
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10"
-      - name: Install dependencies
+          cache: "pip"
+
+      - name: Upgrade pip
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt pytest
+          python -m pip install --upgrade pip setuptools wheel
+
+      - name: Install project dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -e .
+
+      - name: Show environment information
+        run: |
+          python --version
+          python -c "import torch; print('PyTorch:', torch.__version__)"
+          python -c "import torchvision; print('Torchvision:', torchvision.__version__)"
+          python -c "import sklearn; print('Scikit-learn:', sklearn.__version__)"
+
       - name: Run tests
-        run: pytest -q
+        run: |
+          pytest -q
